@@ -1,4 +1,7 @@
 library(rootSolve)
+
+source('C:/Users/User/Google Drive/Research/Git/Djehiche_Giesecke/functions.R')
+
 #library(pushoverr)
 
 set.seed(1234)
