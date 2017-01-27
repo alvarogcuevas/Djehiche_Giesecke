@@ -3,11 +3,11 @@
 #############
 
 b<-function(x){
-  1
+  0
 }
 
 sigma_fn<-function(x){
-  1
+  x
 }
 
 lambda<-function(x){
@@ -15,7 +15,7 @@ lambda<-function(x){
 }
 
 gamma_fn<-function(y){
-  0*y
+  1*y
 }
 
 random_mark<-function(){
@@ -24,7 +24,7 @@ random_mark<-function(){
 
 H.px<-function(p,x){
   exponent<-diag(x=p,nrow=length(p),ncol=length(p))%*%t(replicate(length(p),mark_set))
-  b(x)*p+(0.5*sigma_fn(x)^2)*p^2#+rowSums(exp(exponent)-1-exponent)
+  b(x)*p+(0.5*sigma_fn(x)^2)*p^2+rowSums(exp(exponent)-1-exponent)
 }
 
 c_H<-function(){
@@ -32,15 +32,13 @@ c_H<-function(){
     optimize(f=H.px,interval = c(-10000,10000),maximum = FALSE,x=x)$objective
   }
   optimize(f=inside,interval = c(-10000,10000),maximum = TRUE)$objective
-  #minimizar en p, y que quede una funcion de x
-  #maximizr en x
 }
 
 
 p.fn<-function(z,c_,max){
   H.xpc<-function(p,xx,c_){
     exponent<-diag(x=p,nrow=length(p),ncol=length(p))%*%t(replicate(length(p),mark_set))
-    b(xx)*p+(0.5*sigma_fn(xx)^2)*p^2#+rowSums(exp(exponent)-1-exponent)-c_
+    b(xx)*p+(0.5*sigma_fn(xx)^2)*p^2+rowSums(exp(exponent)-1-exponent)-c_
   }
   pp<-sapply(X = z,FUN=function(x) uniroot.all(f = H.xpc,interval = c(-10,10),xx=x,c_=c_))
   if (max==TRUE){fff<-"max"}
