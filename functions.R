@@ -22,6 +22,21 @@ random_mark<-function(){
   sample(x =mark_set,replace = FALSE,size = 1)
 }
 
+H.px<-function(p,x){
+  exponent<-diag(x=p,nrow=length(p),ncol=length(p))%*%t(replicate(length(p),mark_set))
+  b(x)*p+(0.5*sigma_fn(x)^2)*p^2#+rowSums(exp(exponent)-1-exponent)
+}
+
+c_H<-function(){
+  inside<-function(x){
+    optimize(f=H.px,interval = c(-10000,10000),maximum = FALSE,x=x)$objective
+  }
+  optimize(f=inside,interval = c(-10000,10000),maximum = TRUE)$objective
+  #minimizar en p, y que quede una funcion de x
+  #maximizr en x
+}
+
+
 p.fn<-function(z,c_,max){
   H.xpc<-function(p,xx,c_){
     exponent<-diag(x=p,nrow=length(p),ncol=length(p))%*%t(replicate(length(p),mark_set))
