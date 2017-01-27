@@ -1,4 +1,6 @@
 library(rootSolve)
+source('C:/Users/User/Google Drive/Research/Git/Djehiche_Giesecke/functions.R')
+
 #library(pushoverr)
 
 set.seed(1234)
@@ -38,7 +40,7 @@ for(k in 1:length(parameters[,1])){
 
 c_vec<-rep(0,length(parameters[,2]))
 for(k in 1:length(parameters[,2])){
-  c_vec[k]<-optimize(min_max,interval = 100000*c(0,1),maximum =TRUE ,cap_t=parameters[k,2], low_t=low_t,a=Omega_a,b=Omega_b)$maximum
+  c_vec[k]<-optimize(min_max,interval =c(c_H(),100000),maximum =TRUE ,cap_t=parameters[k,2], low_t=low_t,a=Omega_a,b=Omega_b)$maximum
 }
 
 ###############################################################################################################  
