@@ -3,15 +3,15 @@
 #############
 
 b<-function(x){
-  0
+  -x + (1- x)-(16/3)*(1-x)*x+(32/3)*x^2*(1-x)
 }
 
 sigma_fn<-function(x){
-  x
+  sqrt(x + (1- x)+(16/3)*(1-x)*x+(32/3)*x^2*(1-x))
 }
 
 lambda<-function(x){
-  lambda_0+lambda_1*x
+  (1/2)*gamma_tilde^2*sys_cap^2*(x)*(1-x)
 }
 
 gamma_fn<-function(y){
@@ -33,7 +33,6 @@ c_H<-function(){
   }
   optimize(f=inside,interval = c(-10000,10000),maximum = TRUE)$objective
 }
-
 
 p.fn<-function(z,c_,max){
   H.xpc<-function(p,xx,c_){

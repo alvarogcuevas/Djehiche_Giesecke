@@ -1,25 +1,33 @@
 library(rootSolve)
-source('C:/Users/User/Google Drive/Research/Git/Djehiche_Giesecke/functions.R')
+library(ggplot2)
+library(reshape2)
+library(pushoverr)
 
-#library(pushoverr)
+source('~/Concordia/Research/Git/Djehiche_Giesecke/functions - Bistability.R')
 
 set.seed(1234)
-x0<-100
-lambda_0<-5
-lambda_1<-50
-varepsilon_vec<-c(0.05,0.06,0.07,0.08)
-Omega_a<-90
-Omega_b<-110
-mark_set<-c(0.01, 0.015, 0.02, 0.025, 0.03)
-T_vec<-0.04
+x0<-0.75
+#lambda_0<-5
+#lambda_1<-50
+varepsilon_vec<-0.0005
+Omega_a<-0.5
+Omega_b<-1
+mark_set<-c(-1,1)
+T_vec<-80
 parameters<-expand.grid(varepsilon_vec,T_vec)
 low_t<-0
-N_steps<-100
+N_steps<-2000
 sample_size<-10^3
+sys_cap<-100
+gamma_tilde<-1
 
 #####################################################
 # Program #
 ###########
+
+prueba<-chain(x0 = x0,t0 = low_t,T_ = parameters[1,2],epsilon = parameters[1,1],Nsteps = N_steps,c_=0,new = FALSE)#,i = 0,A = 0,E_n=rexp(n = 1,rate = 1))
+qplot(x = prueba$s, y = prueba$Z)
+
 
 for(k in 1:length(parameters[,1])){
   time_trials<-indicators<-prom<-c()
