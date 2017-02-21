@@ -12,6 +12,7 @@ sigma_fn<-function(x){
 
 lambda<-function(x){
   (1/2)*gamma_tilde^2*sys_cap^2*(x)*(1-x)
+  #0.5*varepsilon_vec^2*sys_cap^2
 }
 
 gamma_fn<-function(y){
@@ -24,14 +25,14 @@ random_mark<-function(){
 
 H.px<-function(p,x){
   exponent<-diag(x=p,nrow=length(p),ncol=length(p))%*%t(replicate(length(p),mark_set))
-  b(x)*bp+(0.5*sigma_fn(x)^2)*p^2+rowSums(exp(exponent)-1-exponent)
+  b(x)*p+(0.5*sigma_fn(x)^2)*p^2+rowSums(exp(exponent)-1-exponent)
 }
 
 c_H<-function(){
   inside<-function(x){
-    optimize(f=H.px,interval = c(-10000,10000),maximum = FALSE,x=x)$objective
+    optimize(f=H.px,interval = c(-500,500),maximum = FALSE,x=x)$objective
   }
-  optimize(f=inside,interval = c(-10000,10000),maximum = TRUE)$objective
+  optimize(f=inside,interval = c(-10000,1.05696),maximum = TRUE)$objective
 }
 
 p.fn<-function(z,c_,max){
@@ -59,12 +60,12 @@ mane<-function(c_,x,y){
   }
 }
 
-min_max<-function(c_,cap_t,low_t,a,b_){
-  min(mane(c_,x0,a)$value,mane(c_,x0,b_)$value)-c_*(cap_t-low_t)
+min_max<-function(c_,cap_t,low_t,a,b_,x_0){
+  min(mane(c_,x_0,a)$value,mane(c_,x_0,b_)$value)-c_*(cap_t-low_t)
 }
 
-Theta<-function(x,c_){
-  if(x>x0){
+Theta<-function(x,c_,x_0){
+  if(x>x_0){
     sigma_fn(x)*p.fn(x,c_,max=TRUE)
   }
   else{
@@ -72,8 +73,8 @@ Theta<-function(x,c_){
   }
 }
 
-b_tilde<-function(x,varepsilon,c_){
-  b(x)+sqrt(varepsilon)*sigma_fn(x)*Theta(x,c_)
+b_tilde<-function(x,varepsilon,c_,x_0){
+  b(x)+sqrt(varepsilon)*sigma_fn(x)*Theta(x,c_,x_0)
 }
 
 new_step_original<-function(Z,s,A,E_n,i,L,h,varepsilon,TT){
@@ -97,23 +98,23 @@ new_step_original<-function(Z,s,A,E_n,i,L,h,varepsilon,TT){
   data.frame(Z=Z,s=s,A=A,E_n=E_n,i=i,L=L)
 }
 
-new_step_after<-function(Z,s,A,E_n,i,L,h,varepsilon,TT,c_){
-  A_temp<-A+lambda(Z)*((i+1)*h-s)
+new_step_after<-function(Z,s,A,E_n,i,L,h,varepsilon,TT,c_,x_0){
+  A_temp<-A+lambda(Z)*(low_t+(i+1)*h-s)
   N<-rnorm(n = 1,mean = 0,sd = 1)
   if(A_temp >= E_n){
     tau_n<-s+(E_n-A)/(lambda(Z)) #time the jump actually happened
-    Z_tau_minus<-Z+b_tilde(Z,varepsilon,c_)*(tau_n-s)+sqrt(varepsilon)*sigma_fn(Z)*sqrt(tau_n-s)*N
-    L<-L+(Theta(Z,c_)*L*sqrt(tau_n-s)*N)/sqrt(varepsilon)
+    Z_tau_minus<-Z+b_tilde(Z,varepsilon,c_,x_0)*(tau_n-s)+sqrt(varepsilon)*sigma_fn(Z)*sqrt(tau_n-s)*N
+    L<-L+(Theta(Z,c_,x_0)*L*sqrt(tau_n-s)*N)/sqrt(varepsilon)
     Z<-Z_tau_minus+varepsilon*gamma_fn(y = random_mark())
     s<-tau_n
     A<-E_n
     E_n<-E_n+rexp(n = 1,rate = 1)
   }
   else{
-    Z_tau_minus<-Z+b_tilde(Z,varepsilon,c_)*((i+1)*h-s)+sqrt(varepsilon)*sigma_fn(Z)*sqrt((i+1)*h-s)*N
-    L<-L+(Theta(Z,c_)*L*sqrt((i+1)*h-s)*N)/sqrt(varepsilon)
+    Z_tau_minus<-Z+b_tilde(Z,varepsilon,c_,x_0)*(low_t+(i+1)*h-s)+sqrt(varepsilon)*sigma_fn(Z)*sqrt(low_t+(i+1)*h-s)*N
+    L<-L+(Theta(Z,c_,x_0)*L*sqrt((i+1)*h-s)*N)/sqrt(varepsilon)
     Z<-Z_tau_minus
-    s<-(i+1)*h
+    s<-low_t+(i+1)*h
     A<-A_temp
     i<-i+1
   }
@@ -122,13 +123,8 @@ new_step_after<-function(Z,s,A,E_n,i,L,h,varepsilon,TT,c_){
 
 chain<-function(Z,s,A,E_n,i,L,T_,t0,epsilon,Nsteps,c_,new){#(x0,t0,T_,epsilon,Nsteps,c_,new,L){
   h<-(T_-t0)/Nsteps
-  #Z<-x0
-  #s<-t0
-  #A<-0
-  #E_n<-rexp(n = 1,rate = 1)
-  #i<-0
-  #L<-1
   Z_t<-data.frame(Z=Z,s=s,A=A,E_n=E_n,i=i,L=L)
+  x_0<-s
   if(new==FALSE){
     while((s<T_)&&(Omega_a<Z)&&(Z<Omega_b)){
       #while(s<T_){
@@ -144,7 +140,7 @@ chain<-function(Z,s,A,E_n,i,L,T_,t0,epsilon,Nsteps,c_,new){#(x0,t0,T_,epsilon,Ns
   else{
     while((s<T_)&&(Omega_a<Z)&&(Z<Omega_b)){
       #while(s<T_){
-      current_step<-new_step_after(Z=Z,s=s,A=A,E_n=E_n,i=i,L=L,h=h,varepsilon=epsilon,TT=T_,c_=c_)
+      current_step<-new_step_after(Z=Z,s=s,A=A,E_n=E_n,i=i,L=L,h=h,varepsilon=epsilon,TT=T_,c_=c_,x_0=x_0)
       Z<-current_step$Z
       s<-current_step$s
       A<-current_step$A
@@ -156,4 +152,3 @@ chain<-function(Z,s,A,E_n,i,L,T_,t0,epsilon,Nsteps,c_,new){#(x0,t0,T_,epsilon,Ns
   }
   return(Z_t)
 }
-
